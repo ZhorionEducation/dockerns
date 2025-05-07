@@ -2,6 +2,11 @@ import uuid
 from datetime import datetime
 import logging
 from app.Conexion_Sql import get_notifications_connection
+import time
+
+_notifications_cache = None
+_last_cache_update = 0
+_CACHE_VALIDITY_SECONDS = 60  # 1 minuto
 
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -10,26 +15,64 @@ class NotificationDB:
     @staticmethod
     def get_all_notifications():
         """
-        Obtener todas las notificaciones de la base de datos
+        Obtener todas las notificaciones de la base de datos con una sola consulta
+        y sistema de caché para mejorar el rendimiento
         """
-        db_conn = get_notifications_connection()  # Usar la función específica
-        query = """
-        SELECT n.id, n.message, n.author, n.timestamp, n.for_user
-        FROM notifications n
-        ORDER BY n.timestamp DESC
-        """
-        notifications = db_conn.execute_query(query)
+        global _notifications_cache, _last_cache_update
         
-        # Para cada notificación, obtener los usuarios que la han leído
-        for notification in notifications:
-            read_query = """
-            SELECT user_id FROM notification_reads 
-            WHERE notification_id = ?
+        # Verificar si el caché es válido
+        current_time = time.time()
+        if _notifications_cache is not None and (current_time - _last_cache_update) < _CACHE_VALIDITY_SECONDS:
+            logger.debug("Usando notificaciones desde el caché")
+            return _notifications_cache
+        
+        try:
+            logger.debug("Obteniendo notificaciones frescas desde la base de datos")
+            db_conn = get_notifications_connection()
+            
+            # Consulta optimizada que obtiene notificaciones y lectores en una sola operación
+            query = """
+            SELECT n.id, n.message, n.author, n.timestamp, n.for_user,
+                nr.user_id as reader_id
+            FROM notifications n
+            LEFT JOIN notification_reads nr ON n.id = nr.notification_id
+            ORDER BY n.timestamp DESC
             """
-            readers = db_conn.execute_query(read_query, (notification['id'],))
-            notification['read_by'] = [reader['user_id'] for reader in readers]
-        
-        return notifications
+            
+            results = db_conn.execute_query(query)
+            
+            # Agrupar los resultados por notificación
+            notifications_dict = {}
+            for row in results:
+                notification_id = row['id']
+                
+                if notification_id not in notifications_dict:
+                    notifications_dict[notification_id] = {
+                        'id': row['id'],
+                        'message': row['message'],
+                        'author': row['author'],
+                        'timestamp': row['timestamp'],
+                        'for_user': row['for_user'],
+                        'read_by': []
+                    }
+                
+                if row['reader_id']:  # Si existe un lector para esta notificación
+                    notifications_dict[notification_id]['read_by'].append(row['reader_id'])
+            
+            # Guardar en caché
+            _notifications_cache = list(notifications_dict.values())
+            _last_cache_update = current_time
+            
+            return _notifications_cache
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo notificaciones: {e}")
+            # Si hay error y tenemos caché antiguo, usarlo
+            if _notifications_cache is not None:
+                logger.info("Error de conexión. Usando caché antiguo de notificaciones")
+                return _notifications_cache
+            # Si no hay caché, devolver lista vacía
+            return []
 
     @staticmethod
     def create_notification(message, author, for_user=None):

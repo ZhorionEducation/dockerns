@@ -31,7 +31,7 @@ class DatabaseConnection:
     def __init__(self, database: str):
         self.database = database
         self.connection_string = (
-            f"Driver={{SQL Server}};"
+            f"Driver={{ODBC Driver 18 for SQL Server}};"  # Asegúrate que coincida exactamente con el odbcinst.ini
             f"Server={env_variables.get('DB_SERVER')};"
             f"Database={database};"
             f"UID={env_variables.get('DB_USER')};"
@@ -128,13 +128,15 @@ def get_notifications_connection():
     
     # Sobreescribimos la cadena de conexión con las credenciales específicas
     db_conn.connection_string = (
-        "Driver={SQL Server};"
-        "Server=newsbd;"  # Servidor específico
+        "Driver={ODBC Driver 18 for SQL Server};"
+        "Server=newsbd,1433;"  # Usar host.docker.internal para acceder al host
         "Database=NotificacionesTrackingNS;"
-        "UID=sa;"         # Usuario específico
-        "PWD=NSnet200;"   # Contraseña específica
+        "UID=sa;"
+        "PWD=NSnet200;"
         "TrustServerCertificate=yes;"
-        f"Timeout={env_variables.get('DB_TIMEOUT')};"
+        "Connection Timeout=10;"  # Reducir el timeout
+        "ConnectRetryCount=3;"    # Intentos de reconexión
+        "ConnectRetryInterval=1;" # Intervalo entre intentos (segundos)
     )
     
     return db_conn

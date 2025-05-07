@@ -34,8 +34,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fetch para obtener las notificaciones
     function fetchNotifications() {
+        // Mostrar un indicador de carga
+        notificationList.innerHTML = '<div class="loading-indicator">Cargando notificaciones...</div>';
+        
+        // Usar un timeout para evitar bloqueos prolongados
+        const fetchTimeout = setTimeout(() => {
+            notificationList.innerHTML = '<div class="error-message">La carga está tardando más de lo esperado.</div>';
+        }, 5000);
+        
         fetch('/api/notifications')
             .then(response => {
+                clearTimeout(fetchTimeout);
                 if (!response.ok) {
                     throw new Error('Error al obtener notificaciones');
                 }
@@ -46,7 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateNotificationUI();
             })
             .catch(error => {
+                clearTimeout(fetchTimeout);
                 console.error('Error:', error);
+                notificationList.innerHTML = '<div class="error-message">Error al cargar notificaciones.</div>';
             });
     }
     
