@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="../static/style_Dashboard.css">
+    <link rel="icon" href="../static/images/Newstetic_logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/regular.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/brands.min.css">
+   
+<body>
+    <div class="top-nav">
+        <div class="left-section">
+            <div class="user-info">
+                <div class="user-avatar">{{ displayName[0] }}</div>
+                <span>{{ displayName }}</span>
+            </div>
+            
+        </div>
+        <div class="logo-container">
+            <img src="../static/images/Newstetic_logo.png" alt="Logo_Newstetic" class="logo">
+            <h1 class="title">TRACKING-NS</h1>
+        </div>
+        <div class="right-section">
+            <div class="notifications-container">
+                <div class="notification-icon" id="notificationIcon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-header">
+                        <h3>Notificaciones</h3>
+                        <button id="markAllRead"><i class="fas fa-check-double"></i> Marcar todo como leído</button>
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <!-- Las notificaciones se cargarán dinámicamente aquí -->
+                    </div>
+                    {% if displayName == 'Practicante TIC' or displayName == 'Alejandro Moreno Jimenez' %}
+                    <div class="admin-controls">
+                        <a href="{{ url_for('main.admin_notifications') }}" class="admin-btn">
+                            <i class="fas fa-cog"></i> Administrar Notificaciones
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-container-lista">
+        <div class="main-content">
+            <div class="filters-container">
+                <center><h3>Filtros</h3></center>
+                <form id="dateFilterForm" class="filter-form">
+                    <div class="form-group">
+                        <label for="startDate">Periodo Inicio:</label>
+                        <input type="month" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">Periodo Fin:</label>
+                        <input type="month" id="endDate" name="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="guia">Guía:</label>
+                        <input type="text" id="guia" name="guia">
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente">Cliente:</label>
+                        <input type="text" id="cliente" name="cliente">
+                    </div>
+                    <div class="form-group">
+                        <div class="label-with-info">
+                            <label for="pedido">Pedido:</label>
+                            <i class="fas fa-exclamation-circle info-icon" onclick="showInfoMessage(this)"></i>
+                            <div class="info-message">Ingrese el número del pedido despues de los dos 0 (Cero).</div>
+                        </div>
+                        <input type="text" id="pedido" name="pedido">
+                    </div>
+                    <div class="form-group">
+                        <label hidden for="transportadora">Transportadora:</label>
+                        <input hidden type="text" id="transportadora" name="transportadora">
+                    </div>
+                    <button type="submit" class="filter-btn">Aplicar Filtro</button>
+
+                    <div class="form-group">
+                        <label hidden for="vendedor">Vendedor:</label>
+                        <input hidden type="text" id="vendedor" name="vendedor">
+                    </div>
+                </form>
+            </div>
+
+            <div id="initialMessage" class="initial-message">
+                Por favor seleccione una fecha para cargar los datos
+            </div>
+
+            <div class="table-container" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Número de Pedido</th>
+                            <th>
+                                Estado del Documento
+                                <button class="filter-button" onclick="showEstadoFilter()">
+                                    <i class="fas fa-caret-down"></i>
+                                </button>
+                                <div id="estadoFilter" class="estado-filter">
+                                    <div class="filter-option" onclick="sortTableByEstado('Cumplido')">
+                                        <i class="fas fa-check-circle"></i> Cumplido
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('Comprometido')">
+                                        <i class="fas fa-clock"></i> Comprometido
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('Aprobado')">
+                                        <i class="fas fa-thumbs-up"></i> Aprobado
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('Anulado')">
+                                        <i class="fas fa-times-circle"></i> Anulado
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('Retenido')">
+                                        <i class="fas fa-pause-circle"></i> Retenido
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('En elaboración')">
+                                        <i class="fas fa-pause-circle"></i> En elaboración
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- <th>Guía</th>
+                            <th>Transportador</th>
+                            <th>Ruta</th> -->
+                            <!-- <th>Fecha Registro</th>
+                            <th>Fecha Preparación</th> 
+                            <th>Fecha Picking</th>
+                            <th>Fecha Alistamiento</th>
+                            <th>Fecha Despacho</th> -->
+                            <th>Fecha Aprobación Cartera</th>
+                            <th>Cliente</th>
+                            <th>Número de Factura</th>
+                            <th>Razón Social Vendedor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button id="prevPage" class="pagination-btn">Anterior</button>
+                <span id="pageInfo"></span>
+                <button id="nextPage" class="pagination-btn">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventana emergente de carga -->
+    <div id="loadingPopup" class="loading-popup" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <script src="../static/js/Dashboard.js"></script>
+    <script src="../static/js/notificaciones.js"></script>
+
+<!-- Agregar antes del cierre del body -->
+<div id="traceModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Trazabilidad del Pedido <span id="modalPedidoNumero"></span></h2>
+        
+        <div class="modal-flex-container">
+            <!-- Columna izquierda: Información del pedido -->
+            <div class="modal-column-left">
+                <!-- Nueva sección para información de envío -->
+                <div class="shipping-info">
+                    <h3>Información de Envío</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Guía:</span>
+                            <span id="modalGuia" class="info-value">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Transportador:</span>
+                            <span id="modalTransportador" class="info-value">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ruta:</span>
+                            <span id="modalRuta" class="info-value">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Columna derecha: Timeline de fechas -->
+            <div class="modal-column-right">
+                <div class="timeline" id="pedidoTimeline">
+                    <!-- El contenido del timeline se generará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+</body>
+</html>

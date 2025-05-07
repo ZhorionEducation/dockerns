@@ -1,0 +1,213 @@
+body {
+    font-family: Arial, sans-serif;
+    background-size: cover; /* Hace que la imagen de fondo cubra toda la pantalla */
+    background-position: center; /* Centra la imagen de fondo */
+    background-repeat: no-repeat; /* Evita que la imagen de fondo se repita */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    animation: changeBackground 30s infinite;
+    transition: background-image 5s ease-in-out;
+}
+
+@keyframes changeBackground {
+    0% {
+        background-image: url(../static/images/Background_Fondo_NS.JPG);
+    }
+    25% {
+        background-image: url(../static/images/Background_Fondo_NS_2.JPG);
+    }
+    50% {
+        background-image: url(../static/images/Background_Fondo_NS_3.JPG);
+    }
+    75% {
+        background-image: url(../static/images/Background_Fondo_NS_4.JPG);
+    }
+    100% {
+        background-image: url(../static/images/Background_Fondo_NS_5.JPG);
+    }
+}
+
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-container .logo {
+    height: 100px;
+    margin-bottom: 20px;
+}
+
+.login-container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-container h1 {
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: rgba(0, 163, 180, 1);
+    animation: slideIn 1s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: rgba(0, 163, 180, 1);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: rgba(0, 163, 180, 1);
+    outline: none;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-container i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: rgba(0, 163, 180, 1);
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(0, 163, 180, 1);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+    animation: fadeIn 1s ease-in-out;
+}
+
+button[type="submit"]:hover {
+    background-color: rgba(0, 163, 180, 0.8);
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.loading .spinner {
+    border: 4px solid rgba(0, 163, 180, 0.2);
+    border-top: 4px solid rgba(0, 163, 180, 1);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.messages {
+    margin-top: 20px;
+    list-style: none;
+    padding: 0;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.messages li {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.messages{
+    background-color: #d8675ad0;
+}
+
+.messages .success {
+    background-color: #2ecc71;
+}
+
+.top-nav .logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.top-nav .logo {
+    height: 50px; /* Ajusta la altura del logo según sea necesario */
+    margin-right: 20px; /* Espacio entre el logo y el resto del contenido */
+}
+
+.flash-message {
+    background-color: #dc3545;
+    color: #000;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+}

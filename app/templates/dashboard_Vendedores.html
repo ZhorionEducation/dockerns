@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="../static/style_Dashboard.css">
+    <link rel="icon" href="../static/images/Newstetic_logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/regular.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/brands.min.css">
+    <link rel="icon" href="../static/images/Newstetic_logo.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+</head>
+<body>
+    <div class="top-nav">
+        <div class="left-section">
+            <div class="user-info">
+                <div class="user-avatar">{{ displayName[0] }}</div>
+                <span>{{ displayName }}</span>
+            </div>
+        </div>
+        <div class="logo-container">
+            <img src="../static/images/Newstetic_logo.png" alt="Logo_Newstetic" class="logo">
+            <h1 class="title">TRACKING-NS</h1>
+        </div>
+        <div class="right-section">
+            <div class="notifications-container">
+                <div class="notification-icon" id="notificationIcon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-header">
+                        <h3>Notificaciones</h3>
+                        <button id="markAllRead"><i class="fas fa-check-double"></i> Marcar todo como leído</button>
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <!-- Las notificaciones se cargarán dinámicamente aquí -->
+                    </div>
+                    {% if displayName == 'Practicante TIC' or displayName == 'Alejandro Moreno Jimenez' %}
+                    <div class="admin-controls">
+                        <a href="{{ url_for('main.admin_notifications') }}" class="admin-btn">
+                            <i class="fas fa-cog"></i> Administrar Notificaciones
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-container-lista">
+        <div class="main-content">
+            <div id="initialMessage" class="initial-message">
+                Cargando datos...
+            </div>
+            <h1>{{displayName}}</h1>
+            <div class="filters-container">
+                <center><h3>Filtros</h3></center>
+                <form id="dateFilterForm" class="filter-form">
+                    <div class="form-group">
+                        <label for="clienteFilter">Cliente:</label>
+                        <input type="text" id="clienteFilter" name="clienteFilter">
+                    </div>
+                    <div class="form-group">
+                        <label for="pedidoFilter">Número de Pedido:</label>
+                        <input type="text" id="pedidoFilter" name="pedidoFilter">
+                    </div>
+                    <div class="form-group">
+                        <label for="facturaFilter">Número de Factura:</label>
+                        <input type="text" id="facturaFilter" name="facturaFilter">
+                    </div>
+                    <div class="form-group">
+                        <label for="referenciaFilter">Referencia:</label>
+                        <input type="text" id="referenciaFilter" name="referenciaFilter">
+                    </div>
+                    <button type="button" id="applyFilters" class="filter-btn">Aplicar Filtros</button>
+                    <button type="button" id="clearFilters" class="filter-btn">Limpiar Filtros</button>
+                </form>
+            </div>
+            <div class="table-container" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Número de Pedido</th>
+                            <th>
+                                Estado del Documento
+                                <button class="filter-button" onclick="showEstadoFilter()">
+                                    <i class="fas fa-caret-down"></i>
+                                </button>
+                                <div id="estadoFilter" class="estado-filter">
+                                    <div class="filter-option" onclick="sortTableByEstado('Cumplido')">
+                                        <i class="fas fa-check-circle"></i> Cumplido
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('Comprometido')">
+                                        <i class="fas fa-clock"></i> Comprometido
+                                    </div>
+                                    <div class="filter-option" onclick="sortTableByEstado('Aprobado')">
+                                        <i class="fas fa-thumbs-up"></i> Aprobado
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- <th>Guia</th>
+                            <th>Transportador</th>
+                            <th>Ruta</th> -->
+                            <th>Razón Social Cliente</th>
+                            <th>Factura</th>
+                            <th>Referencia</th>
+                            
+                            <th>Cantidad</th>
+                            <!-- <th>Fecha Despacho</th>
+                            <th>Fecha Picking</th>
+                            <th>Fecha Preparación</th>
+                            <th>Fecha Alistamiento</th> -->
+                            <th>Razón Social Vendedor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button id="prevPage" class="pagination-btn">Anterior</button>
+                <span id="pageInfo"></span>
+                <button id="nextPage" class="pagination-btn">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventana emergente de carga -->
+    <div id="loadingPopup" class="loading-popup" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <div id="traceModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Trazabilidad del Pedido <span id="modalPedidoNumero"></span></h2>
+            
+            <div class="modal-flex-container">
+                <!-- Columna izquierda: Información del pedido -->
+                <div class="modal-column-left">
+                    <!-- Nueva sección para información de envío -->
+                    <div class="shipping-info">
+                        <h3>Información de Envío</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Guía:</span>
+                                <span id="modalGuia" class="info-value">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Transportador:</span>
+                                <span id="modalTransportador" class="info-value">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Ruta:</span>
+                                <span id="modalRuta" class="info-value">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Columna derecha: Timeline de fechas -->
+                <div class="modal-column-right">
+                    <div class="timeline" id="pedidoTimeline">
+                        <!-- El contenido del timeline se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../static/js/notificaciones.js"></script>
+    <script>
+        let orders = {{ orders|tojson|safe }};
+        let totalItems = {{ total_count|tojson|safe }};
+        const itemsPerPage = 10;
+        let currentPage = 1;
+        let vendedorName = "{{ normalized_displayName }}";
+        let filteredByEstado = false;
+        let filteredOrdersData = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (orders && orders.length > 0) {
+                document.querySelector('.table-container').style.display = 'block';
+                document.getElementById('initialMessage').style.display = 'none';
+                
+                // Obtener todos los datos y ordenarlos al cargar
+                document.getElementById('loadingPopup').style.display = 'flex';
+                getAllOrdersAndPage();
+
+                document.getElementById('prevPage').addEventListener('click', goToPreviousPage);
+                document.getElementById('nextPage').addEventListener('click', goToNextPage);
+
+                document.getElementById('applyFilters').addEventListener('click', applyFilters);
+                document.getElementById('clearFilters').addEventListener('click', clearFilters);
+            } else {
+                document.getElementById('initialMessage').textContent = 'No se encontraron datos para mostrar';
+            }
+            
+            // Añadir manejador para cerrar el filtro cuando se hace clic fuera
+            document.addEventListener('click', function(event) {
+                const filterDiv = document.getElementById('estadoFilter');
+                const filterButton = document.querySelector('.filter-button');
+                
+                if (filterButton && filterDiv && !filterButton.contains(event.target) && !filterDiv.contains(event.target)) {
+                    filterDiv.classList.remove('show');
+                    const filterIcon = document.querySelector('.filter-button i');
+                    if (filterIcon) {
+                        filterIcon.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        });
+
+        function goToPreviousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                if (filteredByEstado) {
+                    showFilteredPage(currentPage);
+                } else {
+                    fetchPageData(currentPage);
+                }
+            }
+        }
+
+        function goToNextPage() {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                if (filteredByEstado) {
+                    showFilteredPage(currentPage);
+                } else {
+                    fetchPageData(currentPage);
+                }
+            }
+        }
+
+        function showFilteredPage(page) {
+            if (!filteredOrdersData || filteredOrdersData.length === 0) return;
+            
+            const startIdx = (page - 1) * itemsPerPage;
+            const endIdx = Math.min(startIdx + itemsPerPage, filteredOrdersData.length);
+            
+            // Ordenar los datos filtrados antes de paginar
+            filteredOrdersData.sort((a, b) => {
+                const estadoA = (a.estado_documento || '').toLowerCase();
+                const estadoB = (b.estado_documento || '').toLowerCase();
+                
+                // Definir el orden de prioridad
+                const getPrioridad = (estado) => {
+                    if (estado.includes('aprobado')) return 1;
+                    if (estado.includes('comprometido')) return 2;
+                    if (estado.includes('cumplido')) return 3;
+                    return 4; // Otros estados
+                };
+                
+                return getPrioridad(estadoA) - getPrioridad(estadoB);
+            });
+            
+            orders = filteredOrdersData.slice(startIdx, endIdx);
+            renderTable(page);
+            updatePagination();
+        }
+
+        function clearFilters() {
+            document.getElementById('clienteFilter').value = '';
+            document.getElementById('pedidoFilter').value = '';
+            document.getElementById('facturaFilter').value = '';
+            document.getElementById('referenciaFilter').value = '';
+            filteredByEstado = false;
+            filteredOrdersData = null;
+            currentPage = 1;
+            
+            // Obtener todos los datos nuevamente
+            getAllOrdersAndPage();
+        }
+
+        function sortTableByEstado(estado) {
+            document.getElementById('loadingPopup').style.display = 'flex';
+
+            const cliente = document.getElementById('clienteFilter').value;
+            const pedido = document.getElementById('pedidoFilter').value;
+            const factura = document.getElementById('facturaFilter').value;
+            const referencia = document.getElementById('referenciaFilter').value;
+
+            // Obtener todos los pedidos
+            fetch(`/api/vendedor_orders?vendedor=${encodeURIComponent(vendedorName)}&page=1&limit=20000&cliente=${encodeURIComponent(cliente)}&pedido=${encodeURIComponent(pedido)}&factura=${encodeURIComponent(factura)}&referencia=${encodeURIComponent(referencia)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al obtener datos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const allOrders = data.orders;
+                    
+                    // Filtrar por el estado seleccionado
+                    filteredOrdersData = allOrders.filter(order => {
+                        const orderEstado = order.estado_documento ? order.estado_documento.toLowerCase() : '';
+                        return orderEstado.includes(estado.toLowerCase());
+                    });
+                    
+                    if (filteredOrdersData.length === 0) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'No hay pedidos',
+                            text: `No tienes pedidos con el estado: ${estado}`,
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#00a3b4'
+                        });
+                        document.getElementById('loadingPopup').style.display = 'none';
+                        return;
+                    }
+                    
+                    // Ordenar todos los datos filtrados globalmente
+                    filteredOrdersData.sort((a, b) => {
+                        const estadoA = (a.estado_documento || '').toLowerCase();
+                        const estadoB = (b.estado_documento || '').toLowerCase();
+                        
+                        // Definir el orden de prioridad
+                        const getPrioridad = (estado) => {
+                            if (estado.includes('aprobado')) return 1;
+                            if (estado.includes('comprometido')) return 2;
+                            if (estado.includes('cumplido')) return 3;
+                            return 4; // Otros estados
+                        };
+                        
+                        return getPrioridad(estadoA) - getPrioridad(estadoB);
+                    });
+                    
+                    filteredByEstado = true;
+                    currentPage = 1;
+                    totalItems = filteredOrdersData.length;
+                    
+                    showFilteredPage(currentPage);
+                    
+                    document.getElementById('loadingPopup').style.display = 'none';
+                    showEstadoFilter();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al filtrar los datos.',
+                        confirmButtonColor: '#00a3b4'
+                    });
+                    document.getElementById('loadingPopup').style.display = 'none';
+                });
+        }
+
+        function applyFilters() {
+            document.getElementById('loadingPopup').style.display = 'flex';
+            
+            // Obtener todos los pedidos primero, ordenarlos y luego paginar
+            getAllOrdersAndPage();
+        }
+
+        function getAllOrdersAndPage() {
+            const cliente = document.getElementById('clienteFilter').value;
+            const pedido = document.getElementById('pedidoFilter').value;
+            const factura = document.getElementById('facturaFilter').value;
+            const referencia = document.getElementById('referenciaFilter').value;
+
+            // Obtener todos los pedidos (usando un límite alto como 1000)
+            fetch(`/api/vendedor_orders?vendedor=${encodeURIComponent(vendedorName)}&page=1&limit=20000&cliente=${encodeURIComponent(cliente)}&pedido=${encodeURIComponent(pedido)}&factura=${encodeURIComponent(factura)}&referencia=${encodeURIComponent(referencia)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al obtener datos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Guardar todos los pedidos
+                    filteredOrdersData = data.orders;
+                    totalItems = filteredOrdersData.length;
+                    
+                    // Ordenar todos los datos globalmente
+                    filteredOrdersData.sort((a, b) => {
+                        const estadoA = (a.estado_documento || '').toLowerCase();
+                        const estadoB = (b.estado_documento || '').toLowerCase();
+                        
+                        // Definir el orden de prioridad
+                        const getPrioridad = (estado) => {
+                            if (estado.includes('aprobado')) return 1;
+                            if (estado.includes('comprometido')) return 2;
+                            if (estado.includes('cumplido')) return 3;
+                            return 4; // Otros estados
+                        };
+                        
+                        return getPrioridad(estadoA) - getPrioridad(estadoB);
+                    });
+                    
+                    // Activar el modo filtrado para usar nuestra propia paginación
+                    filteredByEstado = true;
+                    currentPage = 1;
+                    
+                    // Mostrar la primera página de resultados ordenados
+                    showFilteredPage(currentPage);
+                    
+                    document.getElementById('loadingPopup').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al cargar los datos.',
+                        confirmButtonColor: '#00a3b4'
+                    });
+                    document.getElementById('loadingPopup').style.display = 'none';
+                });
+        }
+
+        function fetchPageData(page) {
+            document.getElementById('loadingPopup').style.display = 'flex';
+
+            if (filteredByEstado && filteredOrdersData) {
+                // Si ya tenemos los datos filtrados, solo paginamos
+                showFilteredPage(page);
+                document.getElementById('loadingPopup').style.display = 'none';
+            } else {
+                // Si no tenemos datos filtrados/ordenados, los obtenemos todos
+                getAllOrdersAndPage();
+            }
+        }
+
+        function renderTable(page) {
+            if (!orders || orders.length === 0) return;
+
+            const tableBody = document.getElementById('ordersTableBody');
+            tableBody.innerHTML = '';
+
+            orders.forEach((order, index) => {
+                const row = document.createElement('tr');
+                
+                // Determine state class - use same naming as in Dashboard.js
+                let estadoClass = 'estado-default-row';
+                const estado = (order.estado_documento || '').toLowerCase();
+                
+                if (estado.includes('facturado') || estado.includes('despachado')) {
+                    estadoClass = 'estado-ok-row';
+                } else if (estado.includes('anulado')) {
+                    estadoClass = 'estado-anulado-row';
+                } else if (estado.includes('aprobado')) {
+                    estadoClass = 'estado-aprobado-row';
+                } else if (estado.includes('comprometido')) {
+                    estadoClass = 'estado-comprometido-row';
+                } else if (estado.includes('cumplido')) {
+                    estadoClass = 'estado-cumplido-row';
+                } else if (estado.includes('en elaboración')) {
+                    estadoClass = 'estado-elaboracion-row';
+                } else if (estado.includes('retenido')) {
+                    estadoClass = 'estado-retenido-row';
+                }
+                
+                // Apply class to the row background
+                row.className = estadoClass;
+                
+                const orderID = `order_${index}`;
+                window[orderID] = order;
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="pedido-circle ${estadoClass}" onclick="showTraceModal(window['${orderID}'])">
+                            ${order.numero_pedido || 'No disponible'}
+                        </div>
+                    </td>
+                    <td>${order.estado_documento || 'No disponible'}</td>
+                    <td>${order.cliente || 'N/A'}</td>
+                    <td>${order.numero_factura || 'N/A'}</td>
+                    <td>${order.referencia || 'N/A'}</td>
+                    <td>${order.cantidad || 'N/A'}</td>
+                    <td>${order.razon_social_vendedor || 'N/A'}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+
+            updatePagination();
+        }
+
+        function showTraceModal(order) {
+            const modal = document.getElementById('traceModal');
+            const timeline = document.getElementById('pedidoTimeline');
+            const modalPedidoNumero = document.getElementById('modalPedidoNumero');
+            
+            modalPedidoNumero.textContent = order.numero_pedido;
+            timeline.innerHTML = '';
+            
+            // Para depuración - muestra en consola todas las propiedades del objeto order
+            console.log("Datos del pedido:", order);
+            
+            // Actualizar información de envío en el modal
+            document.getElementById('modalGuia').textContent = order.guia || 'No disponible';
+            
+            // Crear el contenido de transportador con enlaces según sea necesario
+            const transportadorOriginal = order.transportadora || 'Sin transportador';
+            let transportadorContent = transportadorOriginal;
+            if (transportadorOriginal === 'TCC') {
+                transportadorContent = `<a href="https://www.tcc.com.co" target="_blank">${transportadorOriginal}</a>`;
+            } else if (transportadorOriginal === 'TACMO SAS') {
+                transportadorContent = `<a href="https://tacmosas.com/" target="_blank">${transportadorOriginal}</a>`;
+            } else if (transportadorOriginal === 'IMD & CIA SAS' || transportadorOriginal === 'IMD Y CIA SAS') {
+                transportadorContent = `<a href="https://www.imd.com.co" target="_blank">${transportadorOriginal}</a>`;
+            }
+            
+            document.getElementById('modalTransportador').innerHTML = transportadorContent;
+            document.getElementById('modalRuta').textContent = order.ruta || transportadorOriginal || 'Sin transportador';
+
+            const estados = [
+                {
+                    titulo: 'Registro del Pedido',
+                    fecha: order.fecha_registro_pedido,
+                    icono: 'fa-solid fa-file-signature',
+                    descripcion: 'Pedido registrado en el sistema',
+                    mensajePendiente: 'Pedido no registrado'
+                },
+                {
+                    titulo: 'Preparación',
+                    // Ampliar opciones de búsqueda para fecha de preparación
+                    fecha: order.fecha_preparacion || order.fecha_preparacion_de_pedido || 
+                        order.fecha_preparacion_pedido || order.fecha_ts_aprobacion ||
+                        order["Fecha Preparacion de pedido"],
+                    icono: 'fas fa-box-open',
+                    descripcion: 'Pedido en preparación',
+                    mensajePendiente: 'Pendiente de preparación'
+                },
+                {
+                    titulo: 'Picking',
+                    fecha: order.fecha_picking || order["Fecha picking"] || order["fecha picking"],
+                    icono: 'fas fa-people-carry',
+                    descripcion: 'Proceso de picking completado',
+                    mensajePendiente: 'Pendiente de picking'
+                },
+                {
+                    titulo: 'Alistamiento',
+                    // Ampliar opciones de búsqueda para fecha de alistamiento
+                    fecha: order.fecha_de_alistamiento || order.fecha_alistamiento || 
+                        order["Fecha de alistamiento"] || order["fecha de alistamiento"],
+                    icono: 'fas fa-dolly',
+                    descripcion: 'Pedido alistado para despacho',
+                    mensajePendiente: 'Pendiente de alistamiento'
+                },
+                {
+                    titulo: 'Despacho',
+                    fecha: order.fecha_despacho || order["Fecha_Despacho"],
+                    icono: 'fas fa-shipping-fast',
+                    descripcion: 'Pedido despachado al cliente',
+                    mensajePendiente: 'No se ha despachado'
+                }
+            ];
+
+            // Encontrar el estado actual
+            let estadoActual = 0;
+            for (let i = estados.length - 1; i >= 0; i--) {
+                if (estados[i].fecha && estados[i].fecha !== 'No disponible') {
+                    estadoActual = i;
+                    break;
+                }
+            }
+
+            // Filtrar y crear elementos del timeline solo para estados con fecha
+            estados.forEach((estado, index) => {
+                let tieneFecha = false;
+                let fecha = estado.mensajePendiente;
+
+                if (estado.fecha && estado.fecha !== 'No disponible') {
+                    try {
+                        const fechaObj = new Date(estado.fecha);
+                        if (!isNaN(fechaObj.getTime())) {
+                            // Agregar 5 horas a la fecha
+                            fechaObj.setHours(fechaObj.getHours() + 5);
+                            
+                            tieneFecha = true;
+                            fecha = fechaObj.toLocaleString('es-CO', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        }
+                    } catch (e) {
+                        // Si hay error al parsear la fecha, usamos el mensajePendiente
+                        fecha = estado.mensajePendiente;
+                    }
+                }
+                
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                
+                const isActive = index <= estadoActual;
+                const estadoColor = tieneFecha ? (isActive ? '#00a3b4' : '#e0e0e0') : '#ff6b6b';
+                
+                timelineItem.innerHTML = `
+                    <div class="timeline-line"></div>
+                    <div class="timeline-icon ${tieneFecha ? (isActive ? 'active' : '') : 'pending'}" 
+                        style="background-color: ${estadoColor}">
+                        <i class="${estado.icono}"></i>
+                    </div>
+                    <div class="timeline-content ${tieneFecha ? (isActive ? 'active' : '') : 'pending'}" 
+                        style="border-left: 4px solid ${estadoColor}; ${!tieneFecha ? 'background-color: #ffe5e5;' : ''}">
+                        <div class="timeline-title">
+                            <i class="${estado.icono}" style="margin-right: 8px; color: ${estadoColor}"></i>
+                            ${estado.titulo}
+                        </div>
+                        <div class="timeline-date" style="color: ${tieneFecha ? (isActive ? '#00a3b4' : '#666') : '#ff6b6b'}">
+                            ${fecha}
+                        </div>
+                        <div class="timeline-description">
+                            ${tieneFecha ? estado.descripcion : 'Estado no registrado'}
+                        </div>
+                    </div>
+                `;
+
+                timeline.appendChild(timelineItem);
+            });
+
+            modal.style.display = 'block';
+
+            // Cerrar modal
+            const closeBtn = document.querySelector('.close-modal');
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+
+            // Cerrar modal al hacer clic fuera
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            document.getElementById('pageInfo').textContent =
+                `Página ${currentPage} de ${totalPages}`;
+
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr || fechaStr === 'No disponible') return 'No disponible';
+
+            try {
+                // Convertir la fecha a un objeto Date
+                const fecha = new Date(fechaStr);
+                if (isNaN(fecha.getTime())) return 'No disponible';
+                
+                // Agregar 5 horas a la fecha
+                fecha.setHours(fecha.getHours() + 5);
+
+                return fecha.toLocaleString('es-CO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/Bogota'
+                });
+            } catch (e) {
+                return 'No disponible';
+            }
+        }
+
+        function showEstadoFilter() {
+            const filterDiv = document.getElementById('estadoFilter');
+            const filterButton = document.querySelector('.filter-button i');
+            const isVisible = filterDiv.classList.contains('show');
+            
+            if (isVisible) {
+                filterDiv.classList.remove('show');
+                filterButton.style.transform = 'rotate(0deg)';
+            } else {
+                filterDiv.classList.add('show');
+                filterButton.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+
+        
+    </script>
+</body>
+</html>
